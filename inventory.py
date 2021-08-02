@@ -41,7 +41,7 @@ class Host:
 
         # convert mysql int-based boolean to real boolean
         self.enabled = True if enabled else False
-        
+
         # create objects from parsable fields
         self.ipaddr = ipaddress.ip_address(ipaddr)
 
@@ -138,12 +138,14 @@ def connect_db(
     )
     return db
 
+
 def read_query(db, query):
     cur = db.cursor(pymysql.cursors.DictCursor)
     cur.execute(query)
     output = cur.fetchall()
     cur.close()
     return output
+
 
 def write_query(db, query):
     cur = db.cursor()
@@ -157,12 +159,14 @@ def write_query(db, query):
         db.close()
         sys.exit(1)
 
+
 def get_hosts(
     where='1 = 1',
     select='`id`, `fqdn`, `enabled`, `features`, `ipaddr`, `label`, `groups`, `upd`'
 ):
     db = connect_db()
-    query = 'SELECT {select} FROM `server_inventory` WHERE {where} ;'.format(select=select, where=where)
+    query = 'SELECT {select} FROM `server_inventory` WHERE {where} ;'.format(
+        select=select, where=where)
     host_list = read_query(db, query)
     db.close()
     return host_list
@@ -173,14 +177,14 @@ def process_hosts(host_list):
     for host in host_list:
         hosts.append(
             Host(
-                id = host['id'],
-                fqdn = host['fqdn'],
-                enabled = host['enabled'],
-                features = host['features'],
-                ipaddr = host['ipaddr'],
-                label = host['label'],
-                groups = host['groups'],
-                upd = host['upd']
+                id=host['id'],
+                fqdn=host['fqdn'],
+                enabled=host['enabled'],
+                features=host['features'],
+                ipaddr=host['ipaddr'],
+                label=host['label'],
+                groups=host['groups'],
+                upd=host['upd']
             )
         )
     return hosts
@@ -243,10 +247,12 @@ def add_host(name, ipaddr=None, groups=None, features=None, label=None, disabled
         fields.append('enabled')
         values.append(0)
 
-    fields = ','.join([ '`{}`'.format(x) for x in fields ])
-    values = ','.join([ "'{}'".format(x) if isinstance(x, str) else str(x) for x in values ])
+    fields = ','.join(['`{}`'.format(x) for x in fields])
+    values = ','.join(["'{}'".format(x) if isinstance(
+        x, str) else str(x) for x in values])
 
-    query = 'INSERT INTO `server_inventory` ({fields}) VALUES ({values});'.format(fields=fields, values=values)
+    query = 'INSERT INTO `server_inventory` ({fields}) VALUES ({values});'.format(
+        fields=fields, values=values)
     write_query(db, query)
     db.close()
 
@@ -262,7 +268,8 @@ def dump(data):
 
 def main(args):
     if args.subparser and args.subparser == 'add':
-        add_host(args.name[0], args.ipaddr, args.groups, args.features, args.label, args.disabled)
+        add_host(args.name[0], args.ipaddr, args.groups,
+                 args.features, args.label, args.disabled)
     elif not args.subparser or args.subparser == 'get':
         hosts = process_hosts(get_hosts())
         groups = build_groups(hosts)
@@ -270,7 +277,8 @@ def main(args):
         if args.subparser:
             if args.get_subparser == 'host':
                 if args.name[0] != 'all':
-                    host_subset = [ host.fqdn for host in hosts if host.fqdn.startswith(args.name[0]) ]
+                    host_subset = [
+                        host.fqdn for host in hosts if host.fqdn.startswith(args.name[0])]
                     hostvar_subset = {}
                     for host in host_subset:
                         hostvar_subset[host] = hostvars[host]
@@ -289,7 +297,7 @@ def main(args):
                     dump(group_hosts)
         elif args.list:
             dump(build_ansible_inventory(groups, hostvars))
-        
+
 
 if __name__ == '__main__':
     args = parse_args()
